@@ -220,10 +220,8 @@ class Sock:
         return md5
 
     def getfile(self, ip, md5):
-        print('meow')
         self.send(ip, want_file)
-        self.send(ip, bytes(md5, encoding=char_set))
-        print('meow')
+        self.send(ip, bytes(work_dir+'\\'+md5, encoding=char_set))
         return self.recv_file(ip)
 
     def process_message(self, ip):
@@ -235,6 +233,8 @@ class Sock:
                 self.recv_file(ip)
             elif kw == want_file:
                 md5 = str(self.get(ip), encoding=char_set)
+                if DEBUG:
+                    print('Wanted file :', md5)
                 self.send_file(ip, md5)
         except:
             pass
@@ -253,4 +253,3 @@ if __name__ == '__main__':
     sk.connect(ip)
     md5 = sk.send_file(ip, 'a.txt')
     sk.getfile(ip, md5)
-
