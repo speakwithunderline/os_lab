@@ -72,7 +72,6 @@ class WFMShelf(QMainWindow, Ui_WFM):
         if status['msg'] == 'succeed':
             # item = status['file_status']
             item.setText(1, u'已下载')
-
             self.statusBar().showMessage('Succeed')
         else:
             self.statusBar().showMessage(status['msg'])

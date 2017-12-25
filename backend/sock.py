@@ -22,7 +22,7 @@ class Sock:
             return ((ip[0]*256+ip[1])*256+(256-ip[2]))*256+ip[3]
         ipList = socket.gethostbyname_ex(socket.gethostname())[2]
         # return sorted(ipList, key=val, reverse=True)[0]
-        return str("192.168.1.164")
+        return str("192.168.43.73")
 
     def q_empty(self, ip):
         if ip not in self.queue.keys():

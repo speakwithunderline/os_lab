@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from backend.sock import *
 from backend.database import *
-
+import os
+import sys
 sk = Sock()
-ip = '192.168.1.137'
+ip = '192.168.43.13'
 sk.connect(ip)
 # init()
 def get_file_list(sk=sk):
@@ -15,6 +16,11 @@ def get_file_list(sk=sk):
 def download_file(file_name, sk=sk, ip=ip):
     md5 = get_file_md5(file_name)
     sk.getfile(ip, md5)
+    os.rename("data\\"+md5, file_name)
+
+def export(file_name, file_path):
+    pass
+
 
 
 def push_file(file_name, sk=sk, ip=ip):

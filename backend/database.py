@@ -43,9 +43,9 @@ def search_all(ip):
         tmp[0] = row[1]
         print(row)
         if row[5] == ip:
-            tmp[2] = u"已下载"
+            tmp[1] = u"已下载"
         else:
-            tmp[2] = u"未下载"
+            tmp[1] = u"未下载"
         res.append(tmp)
     connect.close() 
     return res
