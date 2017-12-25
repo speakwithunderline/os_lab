@@ -2,7 +2,7 @@ import socket
 import hashlib
 import queue
 import threading
-from .constants import *
+from backend.constants import *
 import time
 
 def extend_one_second() :
@@ -168,11 +168,14 @@ class Sock:
             except:
                 self.send(ip, wrong_answer)
         self.unlock_active(ip)
+        print('recv')
         return md5
 
     def getfile(self, ip, md5):
+        print('meow')
         self.send(ip, want_file)
         self.send(ip, bytes(md5, encoding=char_set))
+        print('meow')
         return self.recv_file(ip)
 
     def process_message(self, ip):
@@ -193,10 +196,7 @@ class Sock:
 
 if __name__ == '__main__':
     sk = Sock()
-    sk.server()
-
-if __name__ == '__main__':
-    sk = Sock()
     ip = '192.168.1.137'
+    sk.send(ip, heartbeat)
     md5 = sk.send_file(ip, 'a.txt')
     sk.getfile(ip, md5)

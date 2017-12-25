@@ -11,6 +11,7 @@ def init():
         cursor.execute("""create table test
         (id integer primary key,
         file_name text,
+        md5 text,
         part_id integer,
         source_id text,
         target_id text);""")
@@ -35,6 +36,7 @@ def search_all():
     connect = sqlite3.connect(database_name)
     cursor = connect.cursor()
     data = cursor.execute("""select * from test""")
+    connect.close()
     return data
 
 
@@ -42,5 +44,14 @@ def get_all_files(name):
     connect = sqlite3.connect(database_name)
     cursor = connect.cursor()
     data = cursor.execute("""select * from test where target_id = \'"""+name+"\'")
+    connect.close()
     return data
 
+
+def get_file_md5(name):
+    connect = sqlite3.connect(database_name)
+    cursor = connect.cursor()
+    data = cursor.execute("select * from test where file_name = \'"+name+"\'")
+    connect.close()
+    for i in data:
+        return i[2]
