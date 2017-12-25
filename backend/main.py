@@ -1,17 +1,35 @@
-from sock import *
-from database import *
+from backend.sock import *
+from backend.database import *
+
+
+def get_file_list(sk):
+    data = search_all()
+    ip = sk.myIP()
+    res = []
+    for row in data:
+        tmp = {}
+        tmp['name'] = row[1]
+        if row[5] == ip:
+            tmp['state'] = "yes"
+        else:
+            tmp['state'] = "no"
+        res.append(tmp)
+    return res
+
+
+def download_file(sk, ip, file_name):
+    md5 = get_file_md5(file_name)
+    sk.getfile(ip, md5)
+
+
+def push_file(sk, ip, file_name):
+    my_ip = sk.myIP()
+    sk.connect(ip)
+    md5 = sk.send_file(ip, file_name)
+    name = file_name.split("/")[-1]
+    add_file(name, md5, 0, my_ip, ip)
 
 
 if __name__ == "__main__":
-    init()
-    add_file("abc_1", 0, "make", "fls")
-    data = search_all()
-    for row in data:
-        print(row[0])
-        print(row[1])
-        print(row[2])
-        print(row[3])
-        print(row[4])
-    data = get_all_files("fls")
-    for row in data:
-        print(row)
+    sk = Sock()
+    ip = '192.168.1.137'

@@ -2,7 +2,7 @@ import socket
 import hashlib
 import queue
 import threading
-from .constants import *
+from backend.constants import *
 import time
 import os
 
@@ -53,6 +53,7 @@ class Sock:
                 print('Waiting for message from IP =', ip)
             extend_one_second()
         r = self.queue[ip].get()
+        print(r)
         self.check_active(ip)
         return r
 
@@ -211,11 +212,14 @@ class Sock:
                 self.send(ip, wrong_answer)
             extend_one_second()
         self.unlock_active(ip)
+        print('recv')
         return md5
 
     def getfile(self, ip, md5):
+        print('meow')
         self.send(ip, want_file)
         self.send(ip, bytes(md5, encoding=char_set))
+        print('meow')
         return self.recv_file(ip)
 
     def process_message(self, ip):
@@ -238,10 +242,6 @@ class Sock:
                     self.process_message(ip)
             extend_one_second()
 
-
-if __name__ == '__main__':
-    sk = Sock()
-    sk.server()
 
 if __name__ == '__main__':
     sk = Sock()
