@@ -2,9 +2,11 @@ import socket
 import hashlib
 import queue
 import threading
-from constants import *
+from .constants import *
 import time
 
+def extend_one_second() :
+    time.sleep(default_extend)
 
 class Sock:
     status = {}
@@ -12,22 +14,53 @@ class Sock:
     active = {}
     sk = socket.socket()
 
+    def q_empty(self, ip):
+        if ip not in self.queue.keys():
+            self.queue[ip] = queue.Queue()
+        return self.queue[ip].empty()
+
+    def query_active(self, ip):
+        if ip not in self.active.keys() :
+            self.active[ip] = active_wait
+        return self.active[ip]
+
+    def lock_active(self, ip):
+        while self.query_active(ip) == active_lock :
+            extend_one_second()
+        self.active[ip] = active_lock
+
+    def check_active(self, ip):
+        if self.query_active(ip) != active_lock:
+            if self.q_empty(ip):
+                self.active[ip] = active_wait
+            else:
+                self.active[ip] = active_active
+
+    def unlock_active(self, ip):
+        self.active[ip] = active_wait
+        self.check_active(ip)
+
     def get(self, ip):
-        while True:
-            if ip in self.queue.keys() and not self.queue[ip].empty():
-                break
-        return self.queue[ip].get()
+        while self.query_active(ip) != active_active:
+            time.sleep(default_extend)
+        r = self.queue[ip].get()
+        self.check_active(ip)
+        return r
 
     def put(self, ip, message):
         if ip not in self.queue.keys():
             self.queue[ip] = queue.Queue()
         self.queue[ip].put(message)
+        self.check_active(ip)
 
     def hb(self, ip):
-        pass  #
+        if ip not in self.status.keys():
+            self.status[ip] = time.time()
+        self.status[ip] = time.time()
 
     def socket_process(self):
         while True:
+            extend_one_second()
             self.sk.listen(default_time_out)
             try:
                 skt, address = self.sk.accept()
@@ -42,6 +75,7 @@ class Sock:
     @staticmethod
     def send(ip, message):
         while True:
+            extend_one_second()
             try:
                 skt = socket.socket()
                 skt.connect((ip, default_obj_port))
@@ -73,7 +107,9 @@ class Sock:
         md5 = hashlib.md5(data).digest()
         n = (len(data) + default_size - 1) // default_size
 
+        self.lock_active(ip)
         while True:
+            extend_one_second()
             try:
                 self.send(ip, send_begin)
                 self.send(ip, md5)
@@ -88,6 +124,7 @@ class Sock:
                     break
             except:
                 pass
+        self.unlock_active(ip)
         return hashlib.md5(data).hexdigest()
 
     def pop_file(self, ip):
@@ -97,7 +134,9 @@ class Sock:
                 break
 
     def recv_file(self, ip):
+        self.lock_active(ip)
         while True:
+            extend_one_second()
             try:
                 kw = self.get(ip)
                 if kw != send_begin :
@@ -128,6 +167,7 @@ class Sock:
                 break
             except:
                 self.send(ip, wrong_answer)
+        self.unlock_active(ip)
         return md5
 
     def getfile(self, ip, md5):
@@ -135,10 +175,28 @@ class Sock:
         self.send(ip, bytes(md5, encoding=char_set))
         return self.recv_file(ip)
 
+    def process_message(self, ip):
+        kw = self.get(ip)
+        if kw == want_file:
+            md5 = str(self.get(ip), encoding=char_set)
+            self.send_file(ip, md5)
+
     def server(self):
-        pass
+        while True:
+            extend_one_second()
+            for ip in self.status.keys():
+                if self.query_active(ip):
+                    t = threading.Thread(target=self.process_message, args=(ip))
+                    t.setDaemon(True)
+                    t.start()
 
 
 if __name__ == '__main__':
     sk = Sock()
-    print(sk.recv_file('192.168.1.138'))
+    sk.server()
+
+if __name__ == '__main__':
+    sk = Sock()
+    ip = '192.168.1.137'
+    md5 = sk.send_file(ip, 'a.txt')
+    sk.getfile(ip, md5)
