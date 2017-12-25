@@ -24,6 +24,7 @@ class WFMShelf(QMainWindow, Ui_WFM):
 
     def set_file_list(self):
         files = wfm.get_file_list()
+        print(files)
         ds_files = [
             ['f1.py', u'未下载', '3.3KB', '2017-01-01'],
             ['f1.cpp', u'未下载', '2.7KB', '2017-02-01']
@@ -63,7 +64,7 @@ class WFMShelf(QMainWindow, Ui_WFM):
             elif not self.activated:
                 self.activated = True
                 # TODO status = wfm.file_download(text)
-                thd = DownloadTask(self, self.selectedFile)
+                thd = DownloadTask(self, self.selectedFile, fileName)
                 QThreadPool.globalInstance().start(thd)
                 self.statusBar().showMessage('Downloading')
 
@@ -71,7 +72,7 @@ class WFMShelf(QMainWindow, Ui_WFM):
         if status['msg'] == 'succeed':
             # item = status['file_status']
             item.setText(1, u'已下载')
-            
+
             self.statusBar().showMessage('Succeed')
         else:
             self.statusBar().showMessage(status['msg'])
@@ -100,7 +101,7 @@ class WFMShelf(QMainWindow, Ui_WFM):
         if not self.activated:
             self.activated = True
             # TODO status = wfm.file_upload(text)
-            thd = UploadTask(self)
+            thd = UploadTask(self, text)
             QThreadPool.globalInstance().start(thd)
 
     def upload_succeed(self, status = {'msg': 'succeed', 'file_status': ['cc', 'dd', 'ee', 'ff']}):
@@ -126,20 +127,22 @@ class WFMShelf(QMainWindow, Ui_WFM):
         self.filePath.setText(fileName1)
 
 class UploadTask(QRunnable):
-    def __init__(self, wmf):
+    def __init__(self, wmf, file_name):
         super(QRunnable,self).__init__()
         self.wmf = wmf
+        self.file_name = file_name
     def run(self):
-        time.sleep(5)
-        self.wmf.upload_succeed()
+        msg = wfm.push_file(file_name=self.file_name)
+        self.wmf.upload_succeed(msg)
 
 class DownloadTask(QRunnable):
-    def __init__(self, wmf, item):
+    def __init__(self, wmf, item, file_name):
         super(QRunnable, self).__init__()
         self.wmf = wmf
         self.item = item
+        self.file_name = file_name
     def run(self):
-        time.sleep(5)
+        msg = wfm.download_file(file_name=self.file_name)
         self.wmf.download_succeed(self.item)
 
 if __name__ == "__main__":
