@@ -47,7 +47,10 @@ class Sock:
         self.check_active(ip)
 
     def get(self, ip):
+        while self.queue[ip].empty():
+            extend_one_second()
         r = self.queue[ip].get()
+        print(r)
         self.check_active(ip)
         return r
 
