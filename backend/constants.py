@@ -1,6 +1,7 @@
 
 char_set = 'utf-8'
 work_dir = 'data'
+DEBUG = True
 
 #Networks:
 default_port = 8080
