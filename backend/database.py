@@ -32,12 +32,23 @@ def add_file(file_name, md5, part_id, source_id, target_id):
     connect.close()
 
 
-def search_all():
+def search_all(ip):
     connect = sqlite3.connect(database_name)
     cursor = connect.cursor()
     data = cursor.execute("""select * from test""")
-    connect.close()
-    return data
+    res = []
+    print(data)
+    for row in data:
+        tmp = ["", "", "", ""]
+        tmp[0] = row[1]
+        print(row)
+        if row[5] == ip:
+            tmp[1] = u"已下载"
+        else:
+            tmp[1] = u"未下载"
+        res.append(tmp)
+    connect.close() 
+    return res
 
 
 def get_all_files(name):
@@ -52,6 +63,8 @@ def get_file_md5(name):
     connect = sqlite3.connect(database_name)
     cursor = connect.cursor()
     data = cursor.execute("select * from test where file_name = \'"+name+"\'")
-    connect.close()
     for i in data:
-        return i[2]
+        name = i[2]
+        break
+    connect.close()
+    return name

@@ -1,0 +1,9 @@
+{
+    "server":"45.77.171.125",
+    "server_port":88,
+    "local_port":12345,
+    "password":"19970129ygw",
+    "timeout":300,
+    "method":"chacha20",
+    "fast_open":false
+}

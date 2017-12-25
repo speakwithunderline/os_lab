@@ -21,7 +21,8 @@ class Sock:
             ip = [int(i) for i in ip.split('.')]
             return ((ip[0]*256+ip[1])*256+(256-ip[2]))*256+ip[3]
         ipList = socket.gethostbyname_ex(socket.gethostname())[2]
-        return sorted(ipList, key=val, reverse=True)[0]
+        # return sorted(ipList, key=val, reverse=True)[0]
+        return str("192.168.43.73")
 
     def q_empty(self, ip):
         if ip not in self.queue.keys():
@@ -113,6 +114,7 @@ class Sock:
                 self.send(ip, heartbeat)
 
     def __init__(self):
+        print('ip: ', self.myIP())
         self.sk.bind((self.myIP(), default_port))
         t = threading.Thread(target=self.socket_process)
         t.setDaemon(True)

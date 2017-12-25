@@ -1,35 +1,39 @@
+# -*- coding: utf-8 -*-
 from backend.sock import *
 from backend.database import *
-
-
-def get_file_list(sk):
-    data = search_all()
+import os
+import sys
+sk = Sock()
+ip = '192.168.43.13'
+sk.connect(ip)
+# init()
+def get_file_list(sk=sk):
     ip = sk.myIP()
-    res = []
-    for row in data:
-        tmp = {}
-        tmp['name'] = row[1]
-        if row[5] == ip:
-            tmp['state'] = "yes"
-        else:
-            tmp['state'] = "no"
-        res.append(tmp)
-    return res
+    data = search_all(ip)
+    return data
 
 
-def download_file(sk, ip, file_name):
+def download_file(file_name, sk=sk, ip=ip):
     md5 = get_file_md5(file_name)
     sk.getfile(ip, md5)
+    os.rename("data\\"+md5, file_name)
+
+def export(file_name, file_path):
+    pass
 
 
-def push_file(sk, ip, file_name):
+
+def push_file(file_name, sk=sk, ip=ip):
     my_ip = sk.myIP()
-    sk.connect(ip)
     md5 = sk.send_file(ip, file_name)
     name = file_name.split("/")[-1]
     add_file(name, md5, 0, my_ip, ip)
+    res = {}
+    res['msg'] = 'succeed'
+    res['file_status'] = [name, u"下载", "", ""]
+    return res
 
 
 if __name__ == "__main__":
-    sk = Sock()
-    ip = '192.168.1.137'
+    pass
+
