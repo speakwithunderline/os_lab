@@ -4,6 +4,7 @@ import queue
 import threading
 from backend.constants import *
 import time
+import os
 
 def extend_one_second() :
     time.sleep(default_extend)
@@ -16,7 +17,11 @@ class Sock:
 
     @staticmethod
     def myIP():
-        return socket.gethostbyname(socket.gethostname())
+        def val(ip):
+            ip = [int(i) for i in ip.split('.')]
+            return ((ip[0]*256+ip[1])*256+(256-ip[2]))*256+ip[3]
+        ipList = socket.gethostbyname_ex(socket.gethostname())[2]
+        return sorted(ipList, key=val, reverse=True)[0]
 
     def q_empty(self, ip):
         if ip not in self.queue.keys():
@@ -47,7 +52,9 @@ class Sock:
         self.check_active(ip)
 
     def get(self, ip):
-        while self.queue[ip].empty():
+        while self.q_empty(ip):
+            if DEBUG:
+                print('Waiting for message from IP =', ip)
             extend_one_second()
         r = self.queue[ip].get()
         print(r)
@@ -61,6 +68,8 @@ class Sock:
         self.check_active(ip)
 
     def hb(self, ip):
+        if DEBUG:
+            print('Get heartbeat from IP =', ip)
         if ip not in self.status.keys():
             self.status[ip] = time.time()
         self.status[ip] = time.time()
@@ -90,11 +99,13 @@ class Sock:
                 skt.sendall(message)
                 break
             except:
-                pass
+                if DEBUG:
+                    print('Send ERROR!')
             extend_one_second()
 
     def connect (self, ip):
         self.send(ip, heartbeat)
+        self.hb(ip)
 
     def heart_beat(self):
         while True:
@@ -143,7 +154,7 @@ class Sock:
                     break
             except:
                 if DEBUG:
-                    print('Send error. Resend.')
+                    print('Send file error. Resend.')
             extend_one_second()
         self.unlock_active(ip)
         return hashlib.md5(data).hexdigest()
@@ -189,9 +200,16 @@ class Sock:
 
                 md5 = hashlib.md5(data).hexdigest()
 
-                save_file = open(work_dir+'\\'+md5, 'wb')
-                save_file.write(data)
-                save_file.close()
+                try:
+                    if not os.path.exists(work_dir):
+                        os.mkdir(work_dir)
+                    save_file = open(work_dir+'\\'+md5, 'wb')
+                    save_file.write(data)
+                    save_file.close()
+                except:
+                    if DEBUG:
+                        print('Cannot save in file! filename =', work_dir+'\\'+md5)
+                    raise IOError
 
                 self.send(ip, accepted)
                 break

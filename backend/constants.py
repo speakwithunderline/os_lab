@@ -5,7 +5,7 @@ DEBUG = True
 
 #Networks:
 default_port = 8080
-default_obj_port = 8080
+default_obj_port = default_port
 
 #Clocks:
 default_time_out = 20
