@@ -8,8 +8,8 @@ default_port = 8080
 default_obj_port = default_port
 
 #Clocks:
-default_time_out = 20
-default_time_space = 5
+default_time_out = 200
+default_time_space = 60
 default_extend = 1
 
 default_size = 1024

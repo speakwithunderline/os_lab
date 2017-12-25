@@ -85,8 +85,7 @@ class Sock:
                 else:
                     self.put(address[0], data)
             except:
-                pass
-            extend_one_second()
+                extend_one_second()
 
     @staticmethod
     def send(ip, message):
@@ -120,7 +119,7 @@ class Sock:
         t.start()
         t = threading.Thread(target=self.heart_beat)
         t.setDaemon(True)
-        t.start()
+        #t.start()
         if DEBUG:
             print('Initialized. IP =', self.myIP(), ', Port =', default_port)
 
@@ -216,7 +215,7 @@ class Sock:
                 self.send(ip, wrong_answer)
             extend_one_second()
         self.unlock_active(ip)
-        print('recv')
+        print('Recv finished.')
         return md5
 
     def getfile(self, ip, md5):
@@ -235,16 +234,21 @@ class Sock:
                 md5 = str(self.get(ip), encoding=char_set)
                 if DEBUG:
                     print('Wanted file :', md5)
-                self.send_file(ip, md5)
+                self.send_file(ip, work_dir+'\\'+md5)
         except:
             pass
 
     def server(self):
+        flag = True
         while True:
             for ip in self.status.keys():
                 if self.query_active(ip) == active_active:
+                    flag = True
                     self.process_message(ip)
             extend_one_second()
+            if DEBUG and flag:
+                print('Servers waiting for operations...')
+                flag = False
 
 
 if __name__ == '__main__':
