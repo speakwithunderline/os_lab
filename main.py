@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThreadPool, QRunnable
 import time
 
 from wfm_ui import *
-import wfm
+# import wfm
 
 class WFMShelf(QMainWindow, Ui_WFM):
 
@@ -23,7 +23,10 @@ class WFMShelf(QMainWindow, Ui_WFM):
 
     def set_file_list(self):
         # TODO files = wfm.get_file_list()
-        files = [['a', 'b', 'c', 'd']]
+        files = [
+            ['f1.py', u'未下载', '3.3KB', '2017-01-01'],
+            ['f1.cpp', u'未下载', '2.7KB', '2017-02-01']
+        ]
         for item in files:
             curItem = QtWidgets.QTreeWidgetItem(self.fileList)
             curItem.setText(0, item[0])
@@ -33,7 +36,7 @@ class WFMShelf(QMainWindow, Ui_WFM):
             self.fileList.addTopLevelItem(curItem)
 
     def set_server_list(self):
-        servers = ['a', 'b']
+        servers = ['192.168.0.1', '192.168.1.182', '202.118.228.101']
         for item in servers:
             self.serverList.addItem(item)
 
@@ -67,6 +70,7 @@ class WFMShelf(QMainWindow, Ui_WFM):
         if status['msg'] == 'succeed':
             # item = status['file_status']
             item.setText(1, u'已下载')
+            
             self.statusBar().showMessage('Succeed')
         else:
             self.statusBar().showMessage(status['msg'])
@@ -136,7 +140,6 @@ class DownloadTask(QRunnable):
     def run(self):
         time.sleep(5)
         self.wmf.download_succeed(self.item)
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
