@@ -1,18 +1,22 @@
+# -*- coding: utf-8 -*-
 from backend.sock import *
 from backend.database import *
 
-
-def get_file_list(sk):
+sk = Sock()
+ip = '192.168.1.137'
+# init()
+def get_file_list(sk=sk):
     data = search_all()
     ip = sk.myIP()
     res = []
+    print(data)
     for row in data:
-        tmp = {}
-        tmp['name'] = row[1]
+        tmp = ["", "", "", ""]
+        tmp[0] = row[1]
         if row[5] == ip:
-            tmp['state'] = "yes"
+            tmp[2] = u"已下载"
         else:
-            tmp['state'] = "no"
+            tmp[2] = u"未下载"
         res.append(tmp)
     return res
 
@@ -33,3 +37,4 @@ def push_file(sk, ip, file_name):
 if __name__ == "__main__":
     sk = Sock()
     ip = '192.168.1.137'
+    init()

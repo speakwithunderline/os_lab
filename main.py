@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThreadPool, QRunnable
 import time
 
 from wfm_ui import *
-# import wfm
+import backend as wfm
 
 class WFMShelf(QMainWindow, Ui_WFM):
 
@@ -18,12 +18,13 @@ class WFMShelf(QMainWindow, Ui_WFM):
         super(WFMs, self).__init__(*args, **kwargs)
         self.selectedFile = None
         self.activated = False
+        # wfm.init()
         self.setupUi(self)
         self.setTitle(title).setContent(content)
 
     def set_file_list(self):
-        # TODO files = wfm.get_file_list()
-        files = [
+        files = wfm.get_file_list()
+        ds_files = [
             ['f1.py', u'未下载', '3.3KB', '2017-01-01'],
             ['f1.cpp', u'未下载', '2.7KB', '2017-02-01']
         ]

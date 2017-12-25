@@ -36,7 +36,9 @@ def search_all():
     connect = sqlite3.connect(database_name)
     cursor = connect.cursor()
     data = cursor.execute("""select * from test""")
-    connect.close()
+    # connect.close() 
+    for i in data:
+        print(i)
     return data
 
 

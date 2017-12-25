@@ -103,6 +103,7 @@ class Sock:
                 self.send(ip, heartbeat)
 
     def __init__(self):
+        print('ip: ', self.myIP())
         self.sk.bind((self.myIP(), default_port))
         t = threading.Thread(target=self.socket_process)
         t.setDaemon(True)
