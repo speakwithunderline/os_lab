@@ -14,6 +14,10 @@ class Sock:
     active = {}
     sk = socket.socket()
 
+    @staticmethod
+    def myIP():
+        return socket.gethostbyname(socket.gethostname())
+
     def q_empty(self, ip):
         if ip not in self.queue.keys():
             self.queue[ip] = queue.Queue()
@@ -26,6 +30,8 @@ class Sock:
 
     def lock_active(self, ip):
         while self.query_active(ip) == active_lock :
+            if DEBUG:
+                print(ip,'waiting for lock')
             extend_one_second()
         self.active[ip] = active_lock
 
@@ -41,8 +47,6 @@ class Sock:
         self.check_active(ip)
 
     def get(self, ip):
-        while self.query_active(ip) != active_active:
-            time.sleep(default_extend)
         r = self.queue[ip].get()
         self.check_active(ip)
         return r
@@ -60,7 +64,6 @@ class Sock:
 
     def socket_process(self):
         while True:
-            extend_one_second()
             self.sk.listen(default_time_out)
             try:
                 skt, address = self.sk.accept()
@@ -71,11 +74,13 @@ class Sock:
                     self.put(address[0], data)
             except:
                 pass
+            extend_one_second()
 
     @staticmethod
     def send(ip, message):
+        if DEBUG:
+            print('Send', message, 'to', ip)
         while True:
-            extend_one_second()
             try:
                 skt = socket.socket()
                 skt.connect((ip, default_obj_port))
@@ -83,6 +88,10 @@ class Sock:
                 break
             except:
                 pass
+            extend_one_second()
+
+    def connect (self, ip):
+        self.send(ip, heartbeat)
 
     def heart_beat(self):
         while True:
@@ -91,13 +100,15 @@ class Sock:
                 self.send(ip, heartbeat)
 
     def __init__(self):
-        self.sk.bind((socket.gethostbyname(socket.gethostname()), default_port))
+        self.sk.bind((self.myIP(), default_port))
         t = threading.Thread(target=self.socket_process)
         t.setDaemon(True)
         t.start()
         t = threading.Thread(target=self.heart_beat)
         t.setDaemon(True)
         t.start()
+        if DEBUG:
+            print('Initialized. IP =', self.myIP(), ', Port =', default_port)
 
     def send_file(self, ip, filename):
         file = open(filename, 'rb')
@@ -107,9 +118,13 @@ class Sock:
         md5 = hashlib.md5(data).digest()
         n = (len(data) + default_size - 1) // default_size
 
+        if DEBUG:
+            print('Send file :', data, ', md5 =', md5, ', cnt =', n, ', IP =', ip)
+
         self.lock_active(ip)
         while True:
-            extend_one_second()
+            if DEBUG:
+                print('Send begin:')
             try:
                 self.send(ip, send_begin)
                 self.send(ip, md5)
@@ -123,7 +138,9 @@ class Sock:
                 if recv == accepted:
                     break
             except:
-                pass
+                if DEBUG:
+                    print('Send error. Resend.')
+            extend_one_second()
         self.unlock_active(ip)
         return hashlib.md5(data).hexdigest()
 
@@ -134,19 +151,22 @@ class Sock:
                 break
 
     def recv_file(self, ip):
+        if DEBUG:
+            print('Recv file. IP =', ip)
         self.lock_active(ip)
         while True:
-            extend_one_second()
             try:
-                kw = self.get(ip)
-                if kw != send_begin :
-                    raise IOError
                 md5 = self.get(ip)
+                if md5 == send_begin:
+                    md5 = self.get(ip)
+                if DEBUG:
+                    print('Recv file, md5 =', md5)
 
                 data = []
                 n = int(str(self.get(ip), char_set))
-                for i in range(n) :
-                    data.append(self.get(ip))
+                while len(data) < n:
+                    kw = self.get(ip)
+                    data.append(kw)
 
                 kw = self.get(ip)
                 if kw != send_end :
@@ -154,7 +174,13 @@ class Sock:
                     raise IOError
 
                 data = b''.join(data)
+
+                if DEBUG:
+                    print('Recv data :', data)
+
                 if md5 != hashlib.md5(data).digest() :
+                    if DEBUG:
+                        print('Wrong hash! md5 :', md5, hashlib.md5(data).digest())
                     raise IOError
 
                 md5 = hashlib.md5(data).hexdigest()
@@ -167,6 +193,7 @@ class Sock:
                 break
             except:
                 self.send(ip, wrong_answer)
+            extend_one_second()
         self.unlock_active(ip)
         return md5
 
@@ -176,19 +203,24 @@ class Sock:
         return self.recv_file(ip)
 
     def process_message(self, ip):
-        kw = self.get(ip)
-        if kw == want_file:
-            md5 = str(self.get(ip), encoding=char_set)
-            self.send_file(ip, md5)
+        try:
+            kw = self.get(ip)
+            if DEBUG:
+                print('Get', kw, 'From', ip)
+            if kw == send_begin:
+                self.recv_file(ip)
+            elif kw == want_file:
+                md5 = str(self.get(ip), encoding=char_set)
+                self.send_file(ip, md5)
+        except:
+            pass
 
     def server(self):
         while True:
-            extend_one_second()
             for ip in self.status.keys():
-                if self.query_active(ip):
-                    t = threading.Thread(target=self.process_message, args=(ip))
-                    t.setDaemon(True)
-                    t.start()
+                if self.query_active(ip) == active_active:
+                    self.process_message(ip)
+            extend_one_second()
 
 
 if __name__ == '__main__':
@@ -198,5 +230,7 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     sk = Sock()
     ip = '192.168.1.137'
+    sk.connect(ip)
     md5 = sk.send_file(ip, 'a.txt')
     sk.getfile(ip, md5)
+
